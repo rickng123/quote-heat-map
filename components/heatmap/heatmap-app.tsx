@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -31,10 +31,41 @@ function syncUrl(tickers: string[]) {
   window.history.replaceState(null, '', url)
 }
 
-export function HeatmapApp({ initialTickers }: { initialTickers: string[] }) {
+export function HeatmapApp({
+  initialTickers,
+  fallbackTickers,
+}: {
+  initialTickers: string[]
+  fallbackTickers: string[]
+}) {
   const [tickers, setTickers] = useState(initialTickers)
   const [selected, setSelected] = useState<string | null>(initialTickers[0] ?? null)
   const [sort, setSort] = useState<SortMode>('added')
+
+  useEffect(() => {
+    if (initialTickers.length > 0) return
+
+    try {
+      const saved = window.localStorage.getItem('ticker-heatmap-symbols')
+      const savedTickers = (saved ? saved.split(',').filter(Boolean) : fallbackTickers).slice(0, MAX_TICKERS)
+      if (savedTickers.length > 0) {
+        setTickers(savedTickers)
+        setSelected(savedTickers[0])
+        syncUrl(savedTickers)
+      }
+    } catch {
+      // Storage can be unavailable in privacy-restricted browser contexts.
+    }
+  }, [fallbackTickers, initialTickers])
+
+  useEffect(() => {
+    try {
+      if (tickers.length > 0) window.localStorage.setItem('ticker-heatmap-symbols', tickers.join(','))
+      else window.localStorage.removeItem('ticker-heatmap-symbols')
+    } catch {
+      // Storage can be unavailable in privacy-restricted browser contexts.
+    }
+  }, [tickers])
 
   const key = tickers.length ? `/api/quotes?symbols=${encodeURIComponent(tickers.join(','))}` : null
   const { data, isValidating, mutate } = useSWR(key, fetcher, {
@@ -170,8 +201,7 @@ export function HeatmapApp({ initialTickers }: { initialTickers: string[] }) {
       </div>
 
       <footer className="mt-auto text-xs text-muted-foreground">
-        Quotes may be delayed. SPX, NDX, DJI, RUT and VIX map to their index symbols. Your list is saved in the page URL —
-        bookmark it to keep it.
+        Quotes may be delayed. SPX, NDX, DJI, RUT and VIX map to their index symbols. Your ticker list is saved in this browser.
       </footer>
     </main>
   )
