@@ -107,6 +107,7 @@ export function HeatmapApp({
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">Ticker Heatmap</h1>
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Now on GitHub</p>
           <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
             Daily moves for every symbol you track. Tiles deepen in color as the move grows.
           </p>
